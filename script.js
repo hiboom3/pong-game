@@ -207,6 +207,11 @@ function closeWinScreen() {
 
 // Event listeners
 document.addEventListener('keydown', (e) => {
+    // Prevent default scrolling for arrow keys and space
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+        e.preventDefault();
+    }
+    
     keys[e.key] = true;
     
     if (e.key === 'r' || e.key === 'R') {
