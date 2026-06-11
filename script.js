@@ -51,9 +51,8 @@ let winPoints = 5;
 let gameWon = false;
 let gameMode = 'singleplayer';
 let countdownActive = false;
-let countdownTime = 3;
 let countdownStartTime = 0;
-let lastScoringPlayer = null; // 'player' or 'computer'
+let lastScoringPlayer = null;
 
 // Crowd members
 const crowdMembers = [];
@@ -64,15 +63,14 @@ class CrowdMember {
         this.x = x;
         this.y = y;
         this.baseY = y;
-        this.size = 3;
+        this.size = 2;
         this.cheeringOffset = 0;
         this.cheerPhase = Math.random() * Math.PI * 2;
     }
 
     update(isCheering) {
         if (isCheering) {
-            // Jump up and down when cheering
-            this.cheeringOffset = Math.sin(this.cheerPhase) * 4;
+            this.cheeringOffset = Math.sin(this.cheerPhase) * 3;
             this.cheerPhase += 0.1;
         } else {
             this.cheeringOffset = 0;
@@ -80,33 +78,33 @@ class CrowdMember {
     }
 
     draw() {
-        // Draw pixelated crowd member (simple squares)
-        ctx.fillStyle = '#ff6b6b';
+        // Draw pixelated crowd member (red body)
+        ctx.fillStyle = '#ff4444';
         ctx.fillRect(this.x - this.size, this.y + this.cheeringOffset - this.size, this.size * 2, this.size * 2);
         
-        // Draw head
+        // Draw head (peach/skin color)
         ctx.fillStyle = '#ffcc99';
-        ctx.fillRect(this.x - this.size / 2, this.y + this.cheeringOffset - this.size * 2, this.size, this.size);
+        ctx.fillRect(this.x - this.size / 2, this.y + this.cheeringOffset - this.size * 2.5, this.size, this.size);
     }
 }
 
-// Initialize crowd
+// Initialize crowd - MASSIVE CROWD OFF THE PLAYING FIELD
 function initCrowd() {
     crowdMembers.length = 0;
-    const crowdSpacing = 12;
-    const crowdWidth = 30;
     
-    // Left side crowd (player's crowd)
-    for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 2; j++) {
-            crowdMembers.push(new CrowdMember(crowdWidth - i * crowdSpacing, 30 + j * 15));
+    // Left side crowd (player's crowd) - positioned WAY off to the left
+    const leftX = -40;
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 12; col++) {
+            crowdMembers.push(new CrowdMember(leftX + col * 5, 20 + row * 6));
         }
     }
     
-    // Right side crowd (computer's crowd)
-    for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 2; j++) {
-            crowdMembers.push(new CrowdMember(canvas.width - crowdWidth + i * crowdSpacing, 30 + j * 15));
+    // Right side crowd (computer's crowd) - positioned WAY off to the right
+    const rightX = canvas.width + 40;
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 12; col++) {
+            crowdMembers.push(new CrowdMember(rightX - col * 5, 20 + row * 6));
         }
     }
 }
@@ -116,7 +114,6 @@ function updateCrowd() {
     const isCheering = crowdCheeringTime > 0;
     
     crowdMembers.forEach((member, index) => {
-        // Check which side this crowd member is on
         const isLeftSide = member.x < canvas.width / 2;
         const shouldCheer = isCheering && 
             ((isLeftSide && lastScoringPlayer === 'player') || 
@@ -291,7 +288,6 @@ function closeWinScreen() {
 
 // Event listeners
 document.addEventListener('keydown', (e) => {
-    // Prevent default scrolling for arrow keys and space
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
         e.preventDefault();
     }
@@ -343,7 +339,6 @@ function updateGameStatus() {
 // Handle player paddle movement
 function handlePlayerMovement() {
     if (gameMode === 'singleplayer') {
-        // Single player: arrow keys for left paddle
         if (keys['ArrowUp']) {
             player.y = Math.max(0, player.y - player.speed);
         }
@@ -351,7 +346,6 @@ function handlePlayerMovement() {
             player.y = Math.min(canvas.height - paddleHeight, player.y + player.speed);
         }
     } else {
-        // Two player: W/S for left paddle, arrow keys for right paddle
         if (keys['w'] || keys['W']) {
             player.y = Math.max(0, player.y - player.speed);
         }
@@ -370,7 +364,7 @@ function handlePlayerMovement() {
 
 // Computer AI with difficulty-based mechanics
 function updateComputerAI() {
-    if (gameMode === 'twoplayer') return; // No AI in two player mode
+    if (gameMode === 'twoplayer') return;
     
     const computerCenter = computer.y + paddleHeight / 2;
     const ballCenter = ball.y;
@@ -442,7 +436,7 @@ function updateBall() {
     if (ball.x - ball.radius < 0) {
         computerScore++;
         lastScoringPlayer = 'computer';
-        crowdCheeringTime = 30; // 30 frames of cheering
+        crowdCheeringTime = 30;
         updateScore();
         if (!checkWinner()) {
             startCountdown();
@@ -450,7 +444,7 @@ function updateBall() {
     } else if (ball.x + ball.radius > canvas.width) {
         playerScore++;
         lastScoringPlayer = 'player';
-        crowdCheeringTime = 30; // 30 frames of cheering
+        crowdCheeringTime = 30;
         updateScore();
         if (!checkWinner()) {
             startCountdown();
@@ -461,10 +455,11 @@ function updateBall() {
 // Start countdown
 function startCountdown() {
     countdownActive = true;
-    countdownTime = 3;
     countdownStartTime = Date.now();
     ball.x = canvas.width / 2;
     ball.y = canvas.height / 2;
+    ball.dx = 0;
+    ball.dy = 0;
 }
 
 // Update countdown
@@ -472,10 +467,10 @@ function updateCountdown() {
     if (!countdownActive) return;
     
     const elapsed = (Date.now() - countdownStartTime) / 1000;
-    const remaining = Math.max(0, 3 - elapsed);
     
-    if (remaining <= 0) {
+    if (elapsed >= 3) {
         countdownActive = false;
+        // Launch ball with random direction
         ball.dx = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
         ball.dy = (Math.random() - 0.5) * ball.speed;
     }
@@ -488,11 +483,21 @@ function drawCountdown() {
     const elapsed = (Date.now() - countdownStartTime) / 1000;
     const remaining = Math.max(0, Math.ceil(3 - elapsed));
     
-    ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
-    ctx.font = 'bold 60px Arial';
+    // Semi-transparent background for countdown
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(canvas.width / 2 - 50, canvas.height / 2 - 50, 100, 100);
+    
+    // Draw countdown number
+    ctx.fillStyle = '#ffff00';
+    ctx.font = 'bold 80px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(remaining, canvas.width / 2, canvas.height / 2);
+    
+    // Draw "Get Ready" text
+    ctx.fillStyle = '#00ff00';
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText('Get Ready!', canvas.width / 2, canvas.height / 2 + 60);
 }
 
 // Update score display
@@ -559,11 +564,9 @@ function drawCenterLine() {
 }
 
 function drawGame() {
-    // Clear canvas
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw elements
     drawCenterLine();
     drawCrowd();
     drawPaddle(player);
