@@ -31,21 +31,31 @@ h1 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.difficulty-selector {
+.game-settings {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.difficulty-selector,
+.win-points-selector {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 15px;
-    flex-wrap: wrap;
 }
 
-.difficulty-selector label {
+.difficulty-selector label,
+.win-points-selector label {
     color: #ffd700;
     font-size: 1.1em;
 }
 
-.difficulty-selector select {
+.difficulty-selector select,
+.win-points-selector input {
     padding: 10px 15px;
     border-radius: 8px;
     border: 2px solid #00ff00;
@@ -57,12 +67,14 @@ h1 {
     font-weight: bold;
 }
 
-.difficulty-selector select:hover {
+.difficulty-selector select:hover,
+.win-points-selector input:hover {
     border-color: #ffd700;
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
-.difficulty-selector select:focus {
+.difficulty-selector select:focus,
+.win-points-selector input:focus {
     outline: none;
     box-shadow: 0 0 15px rgba(0, 255, 0, 0.8);
 }
@@ -71,6 +83,11 @@ h1 {
     background: #1e3c72;
     color: #ffffff;
     padding: 10px;
+}
+
+.win-points-selector input {
+    width: 80px;
+    text-align: center;
 }
 
 .score-board {
@@ -129,4 +146,83 @@ h1 {
 
 .controls strong {
     color: #ffd700;
+}
+
+/* Win Screen Styles */
+.win-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.win-screen.hidden {
+    display: none;
+}
+
+.win-content {
+    background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+    padding: 60px 80px;
+    border-radius: 20px;
+    box-shadow: 0 0 50px rgba(0, 255, 0, 0.8);
+    text-align: center;
+    z-index: 1001;
+    position: relative;
+}
+
+.win-content h1 {
+    font-size: 4em;
+    color: #000;
+    margin-bottom: 20px;
+    text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.2);
+    animation: pulse 0.5s ease-in-out infinite;
+}
+
+.win-content p {
+    font-size: 2em;
+    color: #1e3c72;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.win-content button {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #00ff00;
+    border: 3px solid #00ff00;
+    padding: 15px 40px;
+    font-size: 1.2em;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.win-content button:hover {
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+    transform: scale(1.1);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+#confettiCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    pointer-events: none;
 }

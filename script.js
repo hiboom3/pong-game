@@ -1,5 +1,15 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const confettiCanvas = document.getElementById('confettiCanvas');
+const confettiCtx = confettiCanvas.getContext('2d');
+
+confettiCanvas.width = window.innerWidth;
+confettiCanvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+});
 
 // Game objects
 const paddleWidth = 10;
@@ -37,33 +47,91 @@ let playerScore = 0;
 let computerScore = 0;
 let gameRunning = false;
 let gamePaused = false;
+let winPoints = 5;
+let gameWon = false;
+
+// Confetti particles
+let confetti = [];
+
+class ConfettiPiece {
+    constructor() {
+        this.x = Math.random() * confettiCanvas.width;
+        this.y = -10;
+        this.width = Math.random() * 10 + 5;
+        this.height = Math.random() * 10 + 5;
+        this.velocity = Math.random() * 5 + 3;
+        this.angle = Math.random() * 360;
+        this.spin = Math.random() * 10 - 5;
+        this.color = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'][Math.floor(Math.random() * 6)];
+    }
+
+    update() {
+        this.y += this.velocity;
+        this.angle += this.spin;
+    }
+
+    draw() {
+        confettiCtx.save();
+        confettiCtx.translate(this.x, this.y);
+        confettiCtx.rotate((this.angle * Math.PI) / 180);
+        confettiCtx.fillStyle = this.color;
+        confettiCtx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+        confettiCtx.restore();
+    }
+}
+
+function createConfetti() {
+    confetti = [];
+    for (let i = 0; i < 100; i++) {
+        confetti.push(new ConfettiPiece());
+    }
+}
+
+function updateConfetti() {
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    
+    for (let i = confetti.length - 1; i >= 0; i--) {
+        confetti[i].update();
+        confetti[i].draw();
+        
+        if (confetti[i].y > confettiCanvas.height) {
+            confetti.splice(i, 1);
+        }
+    }
+}
 
 // Difficulty settings
 let difficulty = 'medium';
 const difficultySettings = {
     easy: {
         speed: 3.5,
-        accuracy: 0.6,        // 60% chance to move towards ball
-        missChance: 0.35      // 35% chance to miss when near ball
+        accuracy: 0.6,
+        missChance: 0.35
     },
     medium: {
         speed: 4.5,
-        accuracy: 0.8,        // 80% chance to move towards ball
-        missChance: 0.10      // 10% chance to miss
+        accuracy: 0.8,
+        missChance: 0.10
     },
     hard: {
         speed: 5.5,
-        accuracy: 0.95,       // 95% chance to move towards ball
-        missChance: 0.02      // 2% chance to miss
+        accuracy: 0.95,
+        missChance: 0.02
     },
     impossible: {
         speed: 6,
-        accuracy: 1.0,        // 100% chance to move towards ball
-        missChance: 0.0       // 0% chance to miss
+        accuracy: 1.0,
+        missChance: 0.0
     }
 };
 
 const keys = {};
+
+// Update win points
+function updateWinPoints(value) {
+    winPoints = Math.max(1, Math.min(100, parseInt(value) || 5));
+    document.getElementById('winPoints').value = winPoints;
+}
 
 // Difficulty selector
 function changeDifficulty(newDifficulty) {
@@ -71,6 +139,37 @@ function changeDifficulty(newDifficulty) {
     if (gameRunning) {
         resetGame();
     }
+}
+
+// Check for winner
+function checkWinner() {
+    if (playerScore >= winPoints) {
+        showWinScreen('YOU WIN!', 'You defeated the computer!');
+        gameWon = true;
+        gameRunning = false;
+        return true;
+    } else if (computerScore >= winPoints) {
+        showWinScreen('GAME OVER!', 'The computer defeated you!');
+        gameWon = true;
+        gameRunning = false;
+        return true;
+    }
+    return false;
+}
+
+// Show win screen
+function showWinScreen(title, message) {
+    const winScreen = document.getElementById('winScreen');
+    document.getElementById('winTitle').textContent = title;
+    document.getElementById('winMessage').textContent = message;
+    winScreen.classList.remove('hidden');
+    createConfetti();
+}
+
+// Close win screen
+function closeWinScreen() {
+    document.getElementById('winScreen').classList.add('hidden');
+    resetGame();
 }
 
 // Event listeners
@@ -90,18 +189,19 @@ canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mouseY = e.clientY - rect.top;
     
-    // Constrain paddle to canvas
     player.y = Math.max(0, Math.min(mouseY - paddleHeight / 2, canvas.height - paddleHeight));
 });
 
 canvas.addEventListener('click', () => {
-    if (!gameRunning) {
-        gameRunning = true;
-        gamePaused = false;
-        updateGameStatus();
-    } else {
-        gamePaused = !gamePaused;
-        updateGameStatus();
+    if (!gameWon) {
+        if (!gameRunning) {
+            gameRunning = true;
+            gamePaused = false;
+            updateGameStatus();
+        } else {
+            gamePaused = !gamePaused;
+            updateGameStatus();
+        }
     }
 });
 
@@ -133,26 +233,21 @@ function updateComputerAI() {
     const ballCenter = ball.y;
     const settings = difficultySettings[difficulty];
     
-    // Determine if computer should move (based on accuracy)
     const shouldMove = Math.random() < settings.accuracy;
     
     if (!shouldMove) {
-        return; // Computer doesn't move this frame
+        return;
     }
     
-    // Check if ball is close to computer paddle
     const ballNearPaddle = ball.x > canvas.width - 200;
     
-    // Possibly miss on easier difficulties
     if (ballNearPaddle && Math.random() < settings.missChance) {
-        // Computer "misses" by moving in wrong direction or not moving optimally
         const randomDirection = Math.random() > 0.5 ? 1 : -1;
         computer.y = Math.max(0, Math.min(canvas.height - paddleHeight, 
             computer.y + settings.speed * randomDirection));
         return;
     }
     
-    // Normal AI behavior
     if (computerCenter < ballCenter - 35) {
         computer.y = Math.min(canvas.height - paddleHeight, computer.y + settings.speed);
     } else if (computerCenter > ballCenter + 35) {
@@ -165,13 +260,11 @@ function updateBall() {
     ball.x += ball.dx;
     ball.y += ball.dy;
 
-    // Top and bottom collision
     if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
         ball.dy = -ball.dy;
         ball.y = Math.max(ball.radius, Math.min(canvas.height - ball.radius, ball.y));
     }
 
-    // Paddle collision - Player
     if (
         ball.x - ball.radius < player.x + player.width &&
         ball.y > player.y &&
@@ -180,13 +273,11 @@ function updateBall() {
         ball.dx = -ball.dx;
         ball.x = player.x + player.width + ball.radius;
         
-        // Add spin based on where the ball hit the paddle
         const collidePoint = ball.y - (player.y + player.height / 2);
         ball.dy = (collidePoint / (player.height / 2)) * ball.speed;
         ball.dx = Math.abs(ball.dx);
     }
 
-    // Paddle collision - Computer
     if (
         ball.x + ball.radius > computer.x &&
         ball.y > computer.y &&
@@ -195,21 +286,23 @@ function updateBall() {
         ball.dx = -ball.dx;
         ball.x = computer.x - ball.radius;
         
-        // Add spin based on where the ball hit the paddle
         const collidePoint = ball.y - (computer.y + computer.height / 2);
         ball.dy = (collidePoint / (computer.height / 2)) * ball.speed;
         ball.dx = -Math.abs(ball.dx);
     }
 
-    // Score points
     if (ball.x - ball.radius < 0) {
         computerScore++;
         updateScore();
-        resetBall();
+        if (!checkWinner()) {
+            resetBall();
+        }
     } else if (ball.x + ball.radius > canvas.width) {
         playerScore++;
         updateScore();
-        resetBall();
+        if (!checkWinner()) {
+            resetBall();
+        }
     }
 }
 
@@ -233,12 +326,16 @@ function resetGame() {
     computerScore = 0;
     gameRunning = false;
     gamePaused = false;
+    gameWon = false;
     updateScore();
     updateGameStatus();
     resetBall();
     
     player.y = canvas.height / 2 - paddleHeight / 2;
     computer.y = canvas.height / 2 - paddleHeight / 2;
+    
+    confetti = [];
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
 }
 
 // Draw functions
@@ -273,11 +370,9 @@ function drawCenterLine() {
 }
 
 function drawGame() {
-    // Clear canvas
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw elements
     drawCenterLine();
     drawPaddle(player);
     drawPaddle(computer);
@@ -293,6 +388,11 @@ function gameLoop() {
     }
 
     drawGame();
+    
+    if (confetti.length > 0) {
+        updateConfetti();
+    }
+    
     requestAnimationFrame(gameLoop);
 }
 

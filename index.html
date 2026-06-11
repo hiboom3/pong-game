@@ -10,14 +10,21 @@
     <div class="container">
         <h1>Pong Game</h1>
         
-        <div class="difficulty-selector">
-            <label for="difficulty"><strong>Difficulty:</strong></label>
-            <select id="difficulty" onchange="changeDifficulty(this.value)">
-                <option value="easy">🟢 Easy (Computer misses often)</option>
-                <option value="medium" selected>🟡 Medium (Computer sometimes misses)</option>
-                <option value="hard">🔴 Hard (Computer rarely misses)</option>
-                <option value="impossible">⚫ Impossible (Perfect computer)</option>
-            </select>
+        <div class="game-settings">
+            <div class="difficulty-selector">
+                <label for="difficulty"><strong>Difficulty:</strong></label>
+                <select id="difficulty" onchange="changeDifficulty(this.value)">
+                    <option value="easy">🟢 Easy (Computer misses often)</option>
+                    <option value="medium" selected>🟡 Medium (Computer sometimes misses)</option>
+                    <option value="hard">🔴 Hard (Computer rarely misses)</option>
+                    <option value="impossible">⚫ Impossible (Perfect computer)</option>
+                </select>
+            </div>
+            
+            <div class="win-points-selector">
+                <label for="winPoints"><strong>Points to Win:</strong></label>
+                <input type="number" id="winPoints" value="5" min="1" max="100" onchange="updateWinPoints(this.value)">
+            </div>
         </div>
         
         <div class="score-board">
@@ -42,6 +49,16 @@
             <p>🖱️ Click the canvas to start/pause the game</p>
             <p>⌨️ Press R to reset the game</p>
         </div>
+    </div>
+
+    <!-- Win Screen -->
+    <div id="winScreen" class="win-screen hidden">
+        <div class="win-content">
+            <h1 id="winTitle">YOU WIN!</h1>
+            <p id="winMessage">Congratulations!</p>
+            <button onclick="closeWinScreen()">Play Again</button>
+        </div>
+        <canvas id="confettiCanvas"></canvas>
     </div>
 
     <script src="script.js"></script>
