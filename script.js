@@ -304,7 +304,7 @@ document.addEventListener('keyup', (e) => {
 });
 
 canvas.addEventListener('mousemove', (e) => {
-    if (gameMode === 'singleplayer') {
+    if (gameMode === 'singleplayer' && gameRunning && !countdownActive) {
         const rect = canvas.getBoundingClientRect();
         const mouseY = e.clientY - rect.top;
         player.y = Math.max(0, Math.min(mouseY - paddleHeight / 2, canvas.height - paddleHeight));
@@ -331,6 +331,8 @@ function updateGameStatus() {
         statusElement.textContent = 'Click to Start';
     } else if (gamePaused) {
         statusElement.textContent = 'PAUSED';
+    } else if (countdownActive) {
+        statusElement.textContent = 'Get Ready...';
     } else {
         statusElement.textContent = 'Playing...';
     }
@@ -433,6 +435,7 @@ function updateBall() {
         ball.dx = -Math.abs(ball.dx);
     }
 
+    // Score points and start countdown
     if (ball.x - ball.radius < 0) {
         computerScore++;
         lastScoringPlayer = 'computer';
@@ -460,6 +463,7 @@ function startCountdown() {
     ball.y = canvas.height / 2;
     ball.dx = 0;
     ball.dy = 0;
+    updateGameStatus();
 }
 
 // Update countdown
@@ -468,11 +472,13 @@ function updateCountdown() {
     
     const elapsed = (Date.now() - countdownStartTime) / 1000;
     
+    // When countdown finishes (3 seconds), launch the ball
     if (elapsed >= 3) {
         countdownActive = false;
         // Launch ball with random direction
         ball.dx = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
         ball.dy = (Math.random() - 0.5) * ball.speed;
+        updateGameStatus();
     }
 }
 
@@ -481,23 +487,29 @@ function drawCountdown() {
     if (!countdownActive) return;
     
     const elapsed = (Date.now() - countdownStartTime) / 1000;
-    const remaining = Math.max(0, Math.ceil(3 - elapsed));
+    const remaining = Math.max(1, Math.ceil(3 - elapsed));
     
-    // Semi-transparent background for countdown
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.fillRect(canvas.width / 2 - 50, canvas.height / 2 - 50, 100, 100);
+    // Semi-transparent dark overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.fillRect(canvas.width / 2 - 60, canvas.height / 2 - 70, 120, 140);
     
-    // Draw countdown number
+    // Draw border
+    ctx.strokeStyle = '#ffff00';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(canvas.width / 2 - 60, canvas.height / 2 - 70, 120, 140);
+    
+    // Draw countdown number - BIG AND BOLD
     ctx.fillStyle = '#ffff00';
-    ctx.font = 'bold 80px Arial';
+    ctx.font = 'bold 100px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(remaining, canvas.width / 2, canvas.height / 2);
+    ctx.fillText(remaining, canvas.width / 2, canvas.height / 2 - 10);
     
     // Draw "Get Ready" text
     ctx.fillStyle = '#00ff00';
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText('Get Ready!', canvas.width / 2, canvas.height / 2 + 60);
+    ctx.font = 'bold 20px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Get Ready!', canvas.width / 2, canvas.height / 2 + 55);
 }
 
 // Update score display
@@ -564,30 +576,38 @@ function drawCenterLine() {
 }
 
 function drawGame() {
+    // Clear canvas
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Draw game elements
     drawCenterLine();
     drawCrowd();
     drawPaddle(player);
     drawPaddle(computer);
     drawBall();
+    
+    // Draw countdown on top of everything
     drawCountdown();
 }
 
 // Main game loop
 function gameLoop() {
-    if (gameRunning && !gamePaused) {
+    // Update game state if running and not paused/counting down
+    if (gameRunning && !gamePaused && !countdownActive) {
         handlePlayerMovement();
         updateComputerAI();
         updateBall();
     }
     
+    // Always update countdown and crowd
     updateCountdown();
     updateCrowd();
 
+    // Draw everything
     drawGame();
     
+    // Update confetti if active
     if (confetti.length > 0) {
         updateConfetti();
     }
