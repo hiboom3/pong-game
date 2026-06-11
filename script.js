@@ -49,7 +49,91 @@ let gameRunning = false;
 let gamePaused = false;
 let winPoints = 5;
 let gameWon = false;
-let gameMode = 'singleplayer'; // 'singleplayer' or 'twoplayer'
+let gameMode = 'singleplayer';
+let countdownActive = false;
+let countdownTime = 3;
+let countdownStartTime = 0;
+let lastScoringPlayer = null; // 'player' or 'computer'
+
+// Crowd members
+const crowdMembers = [];
+let crowdCheeringTime = 0;
+
+class CrowdMember {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.baseY = y;
+        this.size = 3;
+        this.cheeringOffset = 0;
+        this.cheerPhase = Math.random() * Math.PI * 2;
+    }
+
+    update(isCheering) {
+        if (isCheering) {
+            // Jump up and down when cheering
+            this.cheeringOffset = Math.sin(this.cheerPhase) * 4;
+            this.cheerPhase += 0.1;
+        } else {
+            this.cheeringOffset = 0;
+        }
+    }
+
+    draw() {
+        // Draw pixelated crowd member (simple squares)
+        ctx.fillStyle = '#ff6b6b';
+        ctx.fillRect(this.x - this.size, this.y + this.cheeringOffset - this.size, this.size * 2, this.size * 2);
+        
+        // Draw head
+        ctx.fillStyle = '#ffcc99';
+        ctx.fillRect(this.x - this.size / 2, this.y + this.cheeringOffset - this.size * 2, this.size, this.size);
+    }
+}
+
+// Initialize crowd
+function initCrowd() {
+    crowdMembers.length = 0;
+    const crowdSpacing = 12;
+    const crowdWidth = 30;
+    
+    // Left side crowd (player's crowd)
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 2; j++) {
+            crowdMembers.push(new CrowdMember(crowdWidth - i * crowdSpacing, 30 + j * 15));
+        }
+    }
+    
+    // Right side crowd (computer's crowd)
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 2; j++) {
+            crowdMembers.push(new CrowdMember(canvas.width - crowdWidth + i * crowdSpacing, 30 + j * 15));
+        }
+    }
+}
+
+// Update crowd
+function updateCrowd() {
+    const isCheering = crowdCheeringTime > 0;
+    
+    crowdMembers.forEach((member, index) => {
+        // Check which side this crowd member is on
+        const isLeftSide = member.x < canvas.width / 2;
+        const shouldCheer = isCheering && 
+            ((isLeftSide && lastScoringPlayer === 'player') || 
+             (!isLeftSide && lastScoringPlayer === 'computer'));
+        
+        member.update(shouldCheer);
+    });
+    
+    if (isCheering) {
+        crowdCheeringTime--;
+    }
+}
+
+// Draw crowd
+function drawCrowd() {
+    crowdMembers.forEach(member => member.draw());
+}
 
 // Confetti particles
 let confetti = [];
@@ -153,7 +237,7 @@ function startTwoPlayer() {
     gameMode = 'twoplayer';
     document.getElementById('player2Label').textContent = 'Player 2';
     document.getElementById('difficultyContainer').style.display = 'none';
-    document.getElementById('controlsText').textContent = "🎮 Player 1: W/S keys  |  Player 2: ⬆️⬇️ Arrow Keys";
+    document.getElementById('controlsText').textContent = '🎮 Player 1: W/S keys  |  Player 2: ⬆️⬇️ Arrow Keys';
     hideModeMenu();
     resetGame();
 }
@@ -232,7 +316,7 @@ canvas.addEventListener('mousemove', (e) => {
 });
 
 canvas.addEventListener('click', () => {
-    if (!gameWon) {
+    if (!gameWon && !countdownActive) {
         if (!gameRunning) {
             gameRunning = true;
             gamePaused = false;
@@ -316,6 +400,11 @@ function updateComputerAI() {
 
 // Update ball position
 function updateBall() {
+    // During countdown, ball doesn't move
+    if (countdownActive) {
+        return;
+    }
+    
     ball.x += ball.dx;
     ball.y += ball.dy;
 
@@ -352,25 +441,58 @@ function updateBall() {
 
     if (ball.x - ball.radius < 0) {
         computerScore++;
+        lastScoringPlayer = 'computer';
+        crowdCheeringTime = 30; // 30 frames of cheering
         updateScore();
         if (!checkWinner()) {
-            resetBall();
+            startCountdown();
         }
     } else if (ball.x + ball.radius > canvas.width) {
         playerScore++;
+        lastScoringPlayer = 'player';
+        crowdCheeringTime = 30; // 30 frames of cheering
         updateScore();
         if (!checkWinner()) {
-            resetBall();
+            startCountdown();
         }
     }
 }
 
-// Reset ball position
-function resetBall() {
+// Start countdown
+function startCountdown() {
+    countdownActive = true;
+    countdownTime = 3;
+    countdownStartTime = Date.now();
     ball.x = canvas.width / 2;
     ball.y = canvas.height / 2;
-    ball.dx = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
-    ball.dy = (Math.random() - 0.5) * ball.speed;
+}
+
+// Update countdown
+function updateCountdown() {
+    if (!countdownActive) return;
+    
+    const elapsed = (Date.now() - countdownStartTime) / 1000;
+    const remaining = Math.max(0, 3 - elapsed);
+    
+    if (remaining <= 0) {
+        countdownActive = false;
+        ball.dx = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
+        ball.dy = (Math.random() - 0.5) * ball.speed;
+    }
+}
+
+// Draw countdown
+function drawCountdown() {
+    if (!countdownActive) return;
+    
+    const elapsed = (Date.now() - countdownStartTime) / 1000;
+    const remaining = Math.max(0, Math.ceil(3 - elapsed));
+    
+    ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
+    ctx.font = 'bold 60px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(remaining, canvas.width / 2, canvas.height / 2);
 }
 
 // Update score display
@@ -386,15 +508,23 @@ function resetGame() {
     gameRunning = false;
     gamePaused = false;
     gameWon = false;
+    countdownActive = false;
+    crowdCheeringTime = 0;
+    lastScoringPlayer = null;
     updateScore();
     updateGameStatus();
-    resetBall();
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height / 2;
+    ball.dx = 0;
+    ball.dy = 0;
     
     player.y = canvas.height / 2 - paddleHeight / 2;
     computer.y = canvas.height / 2 - paddleHeight / 2;
     
     confetti = [];
     confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    
+    initCrowd();
 }
 
 // Draw functions
@@ -429,13 +559,17 @@ function drawCenterLine() {
 }
 
 function drawGame() {
+    // Clear canvas
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Draw elements
     drawCenterLine();
+    drawCrowd();
     drawPaddle(player);
     drawPaddle(computer);
     drawBall();
+    drawCountdown();
 }
 
 // Main game loop
@@ -445,6 +579,9 @@ function gameLoop() {
         updateComputerAI();
         updateBall();
     }
+    
+    updateCountdown();
+    updateCrowd();
 
     drawGame();
     
@@ -455,6 +592,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Start the game loop
+// Initialize
+initCrowd();
 updateGameStatus();
 gameLoop();
