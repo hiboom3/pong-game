@@ -49,6 +49,7 @@ let gameRunning = false;
 let gamePaused = false;
 let winPoints = 5;
 let gameWon = false;
+let gameMode = 'singleplayer'; // 'singleplayer' or 'twoplayer'
 
 // Confetti particles
 let confetti = [];
@@ -127,6 +128,36 @@ const difficultySettings = {
 
 const keys = {};
 
+// Mode Menu Functions
+function showModeMenu() {
+    document.getElementById('modeMenu').classList.remove('hidden');
+    document.getElementById('gameContainer').style.display = 'none';
+    resetGame();
+}
+
+function hideModeMenu() {
+    document.getElementById('modeMenu').classList.add('hidden');
+    document.getElementById('gameContainer').style.display = 'block';
+}
+
+function startSinglePlayer() {
+    gameMode = 'singleplayer';
+    document.getElementById('player2Label').textContent = 'Computer';
+    document.getElementById('difficultyContainer').style.display = 'flex';
+    document.getElementById('controlsText').textContent = '🖱️ Mouse Y-axis or ⬆️⬇️ Arrow Keys to move left paddle';
+    hideModeMenu();
+    resetGame();
+}
+
+function startTwoPlayer() {
+    gameMode = 'twoplayer';
+    document.getElementById('player2Label').textContent = 'Player 2';
+    document.getElementById('difficultyContainer').style.display = 'none';
+    document.getElementById('controlsText').textContent = "🎮 Player 1: W/S keys  |  Player 2: ⬆️⬇️ Arrow Keys";
+    hideModeMenu();
+    resetGame();
+}
+
 // Update win points
 function updateWinPoints(value) {
     winPoints = Math.max(1, Math.min(100, parseInt(value) || 5));
@@ -144,12 +175,14 @@ function changeDifficulty(newDifficulty) {
 // Check for winner
 function checkWinner() {
     if (playerScore >= winPoints) {
-        showWinScreen('YOU WIN!', 'You defeated the computer!');
+        const winnerName = gameMode === 'singleplayer' ? 'You defeated the computer!' : 'Player 1 Wins!';
+        showWinScreen('YOU WIN!', winnerName);
         gameWon = true;
         gameRunning = false;
         return true;
     } else if (computerScore >= winPoints) {
-        showWinScreen('GAME OVER!', 'The computer defeated you!');
+        const loserName = gameMode === 'singleplayer' ? 'The computer defeated you!' : 'Player 2 Wins!';
+        showWinScreen('GAME OVER!', loserName);
         gameWon = true;
         gameRunning = false;
         return true;
@@ -186,10 +219,11 @@ document.addEventListener('keyup', (e) => {
 });
 
 canvas.addEventListener('mousemove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const mouseY = e.clientY - rect.top;
-    
-    player.y = Math.max(0, Math.min(mouseY - paddleHeight / 2, canvas.height - paddleHeight));
+    if (gameMode === 'singleplayer') {
+        const rect = canvas.getBoundingClientRect();
+        const mouseY = e.clientY - rect.top;
+        player.y = Math.max(0, Math.min(mouseY - paddleHeight / 2, canvas.height - paddleHeight));
+    }
 });
 
 canvas.addEventListener('click', () => {
@@ -217,18 +251,38 @@ function updateGameStatus() {
     }
 }
 
-// Handle player paddle movement with arrow keys
+// Handle player paddle movement
 function handlePlayerMovement() {
-    if (keys['ArrowUp']) {
-        player.y = Math.max(0, player.y - player.speed);
-    }
-    if (keys['ArrowDown']) {
-        player.y = Math.min(canvas.height - paddleHeight, player.y + player.speed);
+    if (gameMode === 'singleplayer') {
+        // Single player: arrow keys for left paddle
+        if (keys['ArrowUp']) {
+            player.y = Math.max(0, player.y - player.speed);
+        }
+        if (keys['ArrowDown']) {
+            player.y = Math.min(canvas.height - paddleHeight, player.y + player.speed);
+        }
+    } else {
+        // Two player: W/S for left paddle, arrow keys for right paddle
+        if (keys['w'] || keys['W']) {
+            player.y = Math.max(0, player.y - player.speed);
+        }
+        if (keys['s'] || keys['S']) {
+            player.y = Math.min(canvas.height - paddleHeight, player.y + player.speed);
+        }
+        
+        if (keys['ArrowUp']) {
+            computer.y = Math.max(0, computer.y - computer.speed);
+        }
+        if (keys['ArrowDown']) {
+            computer.y = Math.min(canvas.height - paddleHeight, computer.y + computer.speed);
+        }
     }
 }
 
 // Computer AI with difficulty-based mechanics
 function updateComputerAI() {
+    if (gameMode === 'twoplayer') return; // No AI in two player mode
+    
     const computerCenter = computer.y + paddleHeight / 2;
     const ballCenter = ball.y;
     const settings = difficultySettings[difficulty];

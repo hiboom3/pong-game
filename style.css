@@ -14,6 +14,113 @@ body {
     padding: 20px;
 }
 
+/* Mode Menu Styles */
+.mode-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.mode-menu.hidden {
+    display: none;
+}
+
+.menu-content {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 60px 80px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+}
+
+.menu-content h1 {
+    color: #00ff00;
+    font-size: 4em;
+    margin-bottom: 10px;
+    text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
+    animation: glow 2s ease-in-out infinite;
+}
+
+.menu-content p {
+    color: #ffff00;
+    font-size: 1.5em;
+    margin-bottom: 50px;
+    font-weight: bold;
+}
+
+@keyframes glow {
+    0%, 100% {
+        text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+    50% {
+        text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 255, 0, 0.8);
+    }
+}
+
+.menu-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 280px;
+    padding: 25px 30px;
+    margin: 15px auto;
+    background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+    border: 3px solid #ffffff;
+    border-radius: 12px;
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #1e3c72;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(0, 255, 0, 0.3);
+}
+
+.menu-button:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 30px rgba(0, 255, 0, 0.6);
+}
+
+.menu-button:active {
+    transform: scale(0.98);
+}
+
+.button-icon {
+    font-size: 2.5em;
+}
+
+.button-desc {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+.menu-button-small {
+    padding: 8px 20px;
+    margin: 10px;
+    background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+    border: 2px solid #ffffff;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-weight: bold;
+    color: #1e3c72;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.menu-button-small:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+}
+
 .container {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 15px;

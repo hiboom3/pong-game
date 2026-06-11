@@ -7,11 +7,29 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    <!-- Game Mode Menu -->
+    <div id="modeMenu" class="mode-menu">
+        <div class="menu-content">
+            <h1>Pong Game</h1>
+            <p>Select Game Mode</p>
+            <button onclick="startSinglePlayer()" class="menu-button">
+                <span class="button-icon">🤖</span>
+                <span>Single Player</span>
+                <span class="button-desc">vs Computer</span>
+            </button>
+            <button onclick="startTwoPlayer()" class="menu-button">
+                <span class="button-icon">👥</span>
+                <span>Two Player</span>
+                <span class="button-desc">Local Multiplayer</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="container" id="gameContainer" style="display: none;">
         <h1>Pong Game</h1>
         
         <div class="game-settings">
-            <div class="difficulty-selector">
+            <div class="difficulty-selector" id="difficultyContainer" style="display: none;">
                 <label for="difficulty"><strong>Difficulty:</strong></label>
                 <select id="difficulty" onchange="changeDifficulty(this.value)">
                     <option value="easy">🟢 Easy (Computer misses often)</option>
@@ -25,27 +43,29 @@
                 <label for="winPoints"><strong>Points to Win:</strong></label>
                 <input type="number" id="winPoints" value="5" min="1" max="100" onchange="updateWinPoints(this.value)">
             </div>
+            
+            <button onclick="showModeMenu()" class="menu-button-small">🏠 Back to Menu</button>
         </div>
         
         <div class="score-board">
             <div class="player-score">
-                <h2>Player</h2>
+                <h2 id="player1Label">Player 1</h2>
                 <p id="playerScore">0</p>
             </div>
             <div class="game-status">
                 <p id="gameStatus">Click to Start</p>
             </div>
             <div class="computer-score">
-                <h2>Computer</h2>
+                <h2 id="player2Label">Player 2</h2>
                 <p id="computerScore">0</p>
             </div>
         </div>
 
         <canvas id="gameCanvas" width="800" height="400"></canvas>
 
-        <div class="controls">
+        <div class="controls" id="controlsInfo">
             <p><strong>Controls:</strong></p>
-            <p>🖱️ Mouse Y-axis or ⬆️⬇️ Arrow Keys to move left paddle</p>
+            <p id="controlsText">Mouse Y-axis or Arrow Keys (Up/Down) to move left paddle</p>
             <p>🖱️ Click the canvas to start/pause the game</p>
             <p>⌨️ Press R to reset the game</p>
         </div>
