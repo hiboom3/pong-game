@@ -31,6 +31,48 @@ h1 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+.difficulty-selector {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.difficulty-selector label {
+    color: #ffd700;
+    font-size: 1.1em;
+}
+
+.difficulty-selector select {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 2px solid #00ff00;
+    background: rgba(0, 0, 0, 0.5);
+    color: #ffffff;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.difficulty-selector select:hover {
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.difficulty-selector select:focus {
+    outline: none;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.8);
+}
+
+.difficulty-selector option {
+    background: #1e3c72;
+    color: #ffffff;
+    padding: 10px;
+}
+
 .score-board {
     display: flex;
     justify-content: space-around;

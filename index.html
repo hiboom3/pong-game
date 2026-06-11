@@ -9,6 +9,17 @@
 <body>
     <div class="container">
         <h1>Pong Game</h1>
+        
+        <div class="difficulty-selector">
+            <label for="difficulty"><strong>Difficulty:</strong></label>
+            <select id="difficulty" onchange="changeDifficulty(this.value)">
+                <option value="easy">🟢 Easy (Computer misses often)</option>
+                <option value="medium" selected>🟡 Medium (Computer sometimes misses)</option>
+                <option value="hard">🔴 Hard (Computer rarely misses)</option>
+                <option value="impossible">⚫ Impossible (Perfect computer)</option>
+            </select>
+        </div>
+        
         <div class="score-board">
             <div class="player-score">
                 <h2>Player</h2>
@@ -27,9 +38,9 @@
 
         <div class="controls">
             <p><strong>Controls:</strong></p>
-            <p>Mouse Y-axis or Arrow Keys (Up/Down) to move left paddle</p>
-            <p>Click the canvas to start/pause the game</p>
-            <p>Press R to reset the game</p>
+            <p>🖱️ Mouse Y-axis or ⬆️⬇️ Arrow Keys to move left paddle</p>
+            <p>🖱️ Click the canvas to start/pause the game</p>
+            <p>⌨️ Press R to reset the game</p>
         </div>
     </div>
 

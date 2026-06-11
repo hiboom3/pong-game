@@ -38,7 +38,40 @@ let computerScore = 0;
 let gameRunning = false;
 let gamePaused = false;
 
+// Difficulty settings
+let difficulty = 'medium';
+const difficultySettings = {
+    easy: {
+        speed: 3.5,
+        accuracy: 0.6,        // 60% chance to move towards ball
+        missChance: 0.35      // 35% chance to miss when near ball
+    },
+    medium: {
+        speed: 4.5,
+        accuracy: 0.8,        // 80% chance to move towards ball
+        missChance: 0.10      // 10% chance to miss
+    },
+    hard: {
+        speed: 5.5,
+        accuracy: 0.95,       // 95% chance to move towards ball
+        missChance: 0.02      // 2% chance to miss
+    },
+    impossible: {
+        speed: 6,
+        accuracy: 1.0,        // 100% chance to move towards ball
+        missChance: 0.0       // 0% chance to miss
+    }
+};
+
 const keys = {};
+
+// Difficulty selector
+function changeDifficulty(newDifficulty) {
+    difficulty = newDifficulty;
+    if (gameRunning) {
+        resetGame();
+    }
+}
 
 // Event listeners
 document.addEventListener('keydown', (e) => {
@@ -94,16 +127,36 @@ function handlePlayerMovement() {
     }
 }
 
-// Computer AI
+// Computer AI with difficulty-based mechanics
 function updateComputerAI() {
     const computerCenter = computer.y + paddleHeight / 2;
     const ballCenter = ball.y;
-    const difficulty = 0.8; // Adjust for difficulty (0-1)
-
+    const settings = difficultySettings[difficulty];
+    
+    // Determine if computer should move (based on accuracy)
+    const shouldMove = Math.random() < settings.accuracy;
+    
+    if (!shouldMove) {
+        return; // Computer doesn't move this frame
+    }
+    
+    // Check if ball is close to computer paddle
+    const ballNearPaddle = ball.x > canvas.width - 200;
+    
+    // Possibly miss on easier difficulties
+    if (ballNearPaddle && Math.random() < settings.missChance) {
+        // Computer "misses" by moving in wrong direction or not moving optimally
+        const randomDirection = Math.random() > 0.5 ? 1 : -1;
+        computer.y = Math.max(0, Math.min(canvas.height - paddleHeight, 
+            computer.y + settings.speed * randomDirection));
+        return;
+    }
+    
+    // Normal AI behavior
     if (computerCenter < ballCenter - 35) {
-        computer.y = Math.min(canvas.height - paddleHeight, computer.y + computer.speed * difficulty);
+        computer.y = Math.min(canvas.height - paddleHeight, computer.y + settings.speed);
     } else if (computerCenter > ballCenter + 35) {
-        computer.y = Math.max(0, computer.y - computer.speed * difficulty);
+        computer.y = Math.max(0, computer.y - settings.speed);
     }
 }
 
